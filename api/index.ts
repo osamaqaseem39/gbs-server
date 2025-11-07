@@ -1,19 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
 
-let cachedApp: any;
-
-async function bootstrap() {
-  if (!cachedApp) {
-    const app = await NestFactory.create(AppModule);
-    await app.init(); // No app.listen() for serverless
-    cachedApp = app;
-  }
-  return cachedApp;
-}
+let app;
 
 export default async function handler(req, res) {
-  const app = await bootstrap();
-  const server = app.getHttpAdapter().getInstance();
-  return server(req, res);
+  if (!app) {
+    const nestApp = await NestFactory.create(AppModule);
+    await nestApp.init();
+    app = nestApp.getHttpAdapter().getInstance();
+  }
+
+  return app(req, res);
 }
