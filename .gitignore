@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.cjs
+.pnpm-store/
+
+# Build outputs
+build/
+dist/
+.out/
+.next/
+.nuxt/
+.tmp/
+.tmp/**
+.temp/
+.cache/
+coverage/
+.nyc_output/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Misc
+.eslintcache
+.stylelintcache
+.turbo/
+.vercel/
+.firebase/
+.sass-cache/
+
+tmp/
+**/temp/
+
+# TypeScript
+*.tsbuildinfo
+
+# NestJS
+/.environment
+/.adminbro
