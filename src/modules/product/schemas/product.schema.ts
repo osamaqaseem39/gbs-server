@@ -126,52 +126,58 @@ export class Product {
   @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'ProductImage' })
   images: string[];
 
-  // Pakistani Clothing Specific Fields
-  @ApiProperty({ description: 'Fabric type (e.g., Cotton, Silk, Lawn, Chiffon)' })
+  // Stationery & Book Specific Fields
+  @ApiProperty({ description: 'Material/Paper type (e.g., Cotton, Paper, Cardboard, Plastic)' })
   @Prop({ type: String, trim: true })
-  fabric?: string;
+  material?: string;
 
-  @ApiProperty({ description: 'Collection name (e.g., Summer 2024, Eid Collection)' })
+  @ApiProperty({ description: 'Collection/Series name (e.g., Book Series Name)' })
   @Prop({ type: String, trim: true })
   collectionName?: string;
 
-  @ApiProperty({ description: 'Occasion type (e.g., Formal, Casual, Wedding, Party)' })
+  @ApiProperty({ description: 'Use case (e.g., Educational, Professional, Personal, Art)' })
   @Prop({ type: String, trim: true })
-  occasion?: string;
+  useCase?: string;
 
-  @ApiProperty({ description: 'Season (e.g., Summer, Winter, All Season)' })
+  @ApiProperty({ description: 'Subject area (e.g., Mathematics, Science, English)' })
   @Prop({ type: String, trim: true })
-  season?: string;
+  subject?: string;
 
   @ApiProperty({ description: 'Care instructions' })
   @Prop({ type: String })
   careInstructions?: string;
 
-  @ApiProperty({ description: 'Model measurements for size reference' })
-  @Prop({
-    type: {
-      height: { type: String },
-      bust: { type: String },
-      waist: { type: String },
-      hips: { type: String },
-      sizeWearing: { type: String },
-    },
-  })
-  modelMeasurements?: {
-    height: string;
-    bust: string;
-    waist: string;
-    hips: string;
-    sizeWearing: string;
-  };
-
-  @ApiProperty({ description: 'Designer/Design House name' })
+  @ApiProperty({ description: 'Author name for books' })
   @Prop({ type: String, trim: true })
-  designer?: string;
+  author?: string;
 
-  @ApiProperty({ description: 'Handwork details (e.g., Embroidery, Zari, Sequins)' })
+  @ApiProperty({ description: 'Publisher name' })
+  @Prop({ type: String, trim: true })
+  publisher?: string;
+
+  @ApiProperty({ description: 'ISBN for books' })
+  @Prop({ type: String, trim: true })
+  isbn?: string;
+
+  @ApiProperty({ description: 'Edition number (e.g., 1st Edition, 2024)' })
+  @Prop({ type: String, trim: true })
+  edition?: string;
+
+  @ApiProperty({ description: 'Number of pages' })
+  @Prop({ type: Number })
+  pageCount?: number;
+
+  @ApiProperty({ description: 'Language of the book (e.g., English, Urdu)' })
+  @Prop({ type: String, trim: true })
+  language?: string;
+
+  @ApiProperty({ description: 'Binding type (e.g., Hardcover, Paperback, Spiral)' })
+  @Prop({ type: String, trim: true })
+  bindingType?: string;
+
+  @ApiProperty({ description: 'Special features (e.g., Ruled lines, Perforated pages)' })
   @Prop({ type: [String] })
-  handwork?: string[];
+  specialFeatures?: string[];
 
   @ApiProperty({ description: 'Color family (e.g., Pastels, Brights, Neutrals)' })
   @Prop({ type: String, trim: true })
@@ -181,29 +187,17 @@ export class Product {
   @Prop({ type: String, trim: true })
   pattern?: string;
 
-  @ApiProperty({ description: 'Sleeve length (e.g., Sleeveless, Short, 3/4, Long)' })
+  @ApiProperty({ description: 'Format/Size (e.g., A4, A5, Letter size)' })
   @Prop({ type: String, trim: true })
-  sleeveLength?: string;
+  format?: string;
 
-  @ApiProperty({ description: 'Neckline style (e.g., Round, V-neck, Boat, High)' })
-  @Prop({ type: String, trim: true })
-  neckline?: string;
-
-  @ApiProperty({ description: 'Length (e.g., Short, Medium, Long, Floor Length)' })
-  @Prop({ type: String, trim: true })
-  length?: string;
-
-  @ApiProperty({ description: 'Fit type (e.g., Loose, Fitted, Semi-fitted, Oversized)' })
-  @Prop({ type: String, trim: true })
-  fit?: string;
-
-  @ApiProperty({ description: 'Age group (e.g., Young Adult, Adult, Mature)' })
+  @ApiProperty({ description: 'Age group (e.g., 5-7 years, 8-10 years)' })
   @Prop({ type: String, trim: true })
   ageGroup?: string;
 
-  @ApiProperty({ description: 'Body type suitability' })
-  @Prop({ type: [String] })
-  bodyType?: string[];
+  @ApiProperty({ description: 'Grade/Class level (e.g., Class 1, Grade 5)' })
+  @Prop({ type: String, trim: true })
+  gradeLevel?: string;
 
   @ApiProperty({ description: 'Is this a limited edition item' })
   @Prop({ default: false })
@@ -225,9 +219,67 @@ export class Product {
   @Prop({ type: String })
   sizeChartImageUrl?: string;
 
-  @ApiProperty({ description: 'Available sizes for this product' })
+  @ApiProperty({ description: 'Available sizes for this product (A4, A5, etc. for stationery, or S/M/L/XL for uniforms)' })
   @Prop({ type: [String] })
   availableSizes?: string[];
+
+  // Uniform Specific Fields
+  @ApiProperty({ description: 'Whether this product is a uniform', default: false })
+  @Prop({ default: false })
+  isUniform?: boolean;
+
+  @ApiProperty({ description: 'Uniform type (e.g., School Uniform, Sports Uniform)' })
+  @Prop({ type: String, trim: true })
+  uniformType?: string;
+
+  @ApiProperty({ description: 'Gender (Boys, Girls, Unisex)' })
+  @Prop({ type: String, trim: true })
+  gender?: string;
+
+  @ApiProperty({ description: 'Uniform size (S, M, L, XL, etc.)' })
+  @Prop({ type: String, trim: true })
+  uniformSize?: string;
+
+  // Book Set Specific Fields
+  @ApiProperty({ description: 'Whether this is a book set', default: false })
+  @Prop({ default: false })
+  isBookSet?: boolean;
+
+  @ApiProperty({ description: 'Book set type (class, school, subject, custom)' })
+  @Prop({ type: String, enum: ['class', 'school', 'subject', 'custom'], trim: true })
+  bookSetType?: string;
+
+  @ApiProperty({ description: 'Class/Grade level (e.g., Class 1, Grade 5)' })
+  @Prop({ type: String, trim: true })
+  classLevel?: string;
+
+  @ApiProperty({ description: 'School name for school-specific sets' })
+  @Prop({ type: String, trim: true })
+  schoolName?: string;
+
+  @ApiProperty({ description: 'Educational board (e.g., O-Levels Cambridge, Matric Punjab Board)' })
+  @Prop({ type: String, trim: true })
+  board?: string;
+
+  @ApiProperty({ description: 'Books included in the set' })
+  @Prop({
+    type: [{
+      bookId: { type: String },
+      bookName: { type: String, required: true },
+      subject: { type: String },
+      quantity: { type: Number, default: 1 },
+    }],
+  })
+  setItems?: Array<{
+    bookId?: string;
+    bookName: string;
+    subject?: string;
+    quantity: number;
+  }>;
+
+  @ApiProperty({ description: 'Total number of books in the set' })
+  @Prop({ type: Number, min: 0 })
+  totalBooksInSet?: number;
 
   // UI-specific fields
   @ApiProperty({ description: 'Original price before sale' })
@@ -337,21 +389,31 @@ ProductSchema.index({ status: 1 });
 ProductSchema.index({ price: 1 });
 ProductSchema.index({ createdAt: -1 });
 
-// Pakistani Clothing Specific Indexes
-ProductSchema.index({ fabric: 1 });
+// Stationery & Book Specific Indexes
+ProductSchema.index({ material: 1 });
 ProductSchema.index({ collectionName: 1 });
-ProductSchema.index({ occasion: 1 });
+ProductSchema.index({ useCase: 1 });
+ProductSchema.index({ subject: 1 });
 ProductSchema.index({ season: 1 });
-ProductSchema.index({ designer: 1 });
-ProductSchema.index({ handwork: 1 });
+ProductSchema.index({ publisher: 1 });
+ProductSchema.index({ author: 1 });
+ProductSchema.index({ specialFeatures: 1 });
 ProductSchema.index({ colorFamily: 1 });
 ProductSchema.index({ pattern: 1 });
-ProductSchema.index({ sleeveLength: 1 });
-ProductSchema.index({ neckline: 1 });
-ProductSchema.index({ length: 1 });
-ProductSchema.index({ fit: 1 });
+ProductSchema.index({ format: 1 });
 ProductSchema.index({ ageGroup: 1 });
-ProductSchema.index({ bodyType: 1 });
+ProductSchema.index({ gradeLevel: 1 });
+ProductSchema.index({ board: 1 });
+ProductSchema.index({ schoolName: 1 });
+ProductSchema.index({ classLevel: 1 });
+ProductSchema.index({ isbn: 1 });
+// Uniform Specific Indexes
+ProductSchema.index({ isUniform: 1 });
+ProductSchema.index({ uniformType: 1 });
+ProductSchema.index({ gender: 1 });
+// Book Set Specific Indexes
+ProductSchema.index({ isBookSet: 1 });
+ProductSchema.index({ bookSetType: 1 });
 ProductSchema.index({ isLimitedEdition: 1 });
 ProductSchema.index({ isCustomMade: 1 });
 ProductSchema.index({ sizeChart: 1 });

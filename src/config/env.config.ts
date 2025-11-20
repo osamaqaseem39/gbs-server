@@ -16,8 +16,8 @@ export const appConfig = registerAs('app', () => ({
 
 export const swaggerConfig = registerAs('swagger', () => ({
   enabled: (process.env.SWAGGER_ENABLED || 'true').toLowerCase() !== 'false',
-  title: process.env.SWAGGER_TITLE || "She's Trends API",
-  description: process.env.SWAGGER_DESCRIPTION || 'API documentation for She\'s Trends',
+  title: process.env.SWAGGER_TITLE || "Gujrat Book Shop API",
+  description: process.env.SWAGGER_DESCRIPTION || 'API documentation for Gujrat Book Shop',
   version: process.env.SWAGGER_VERSION || '1.0',
 }));
 

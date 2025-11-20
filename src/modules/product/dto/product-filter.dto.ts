@@ -40,12 +40,12 @@ export class ProductFilterDto {
   @IsString()
   status?: string;
 
-  // Pakistani Clothing Specific Filters
-  @ApiPropertyOptional({ description: 'Fabric types' })
+  // Stationery & Book Specific Filters
+  @ApiPropertyOptional({ description: 'Material types' })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  fabrics?: string[];
+  materials?: string[];
 
   @ApiPropertyOptional({ description: 'Collections' })
   @IsOptional()
@@ -53,11 +53,11 @@ export class ProductFilterDto {
   @IsString({ each: true })
   collectionNames?: string[];
 
-  @ApiPropertyOptional({ description: 'Occasions' })
+  @ApiPropertyOptional({ description: 'Use cases' })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  occasions?: string[];
+  useCases?: string[];
 
   @ApiPropertyOptional({ description: 'Seasons' })
   @IsOptional()
@@ -65,17 +65,17 @@ export class ProductFilterDto {
   @IsString({ each: true })
   seasons?: string[];
 
-  @ApiPropertyOptional({ description: 'Designers' })
+  @ApiPropertyOptional({ description: 'Publishers' })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  designers?: string[];
+  publishers?: string[];
 
-  @ApiPropertyOptional({ description: 'Handwork types' })
+  @ApiPropertyOptional({ description: 'Special features' })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  handwork?: string[];
+  specialFeatures?: string[];
 
   @ApiPropertyOptional({ description: 'Color families' })
   @IsOptional()
@@ -89,29 +89,11 @@ export class ProductFilterDto {
   @IsString({ each: true })
   patterns?: string[];
 
-  @ApiPropertyOptional({ description: 'Sleeve lengths' })
+  @ApiPropertyOptional({ description: 'Formats' })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  sleeveLengths?: string[];
-
-  @ApiPropertyOptional({ description: 'Neckline styles' })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  necklines?: string[];
-
-  @ApiPropertyOptional({ description: 'Lengths' })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  lengths?: string[];
-
-  @ApiPropertyOptional({ description: 'Fit types' })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  fits?: string[];
+  formats?: string[];
 
   @ApiPropertyOptional({ description: 'Age groups' })
   @IsOptional()
@@ -119,11 +101,67 @@ export class ProductFilterDto {
   @IsString({ each: true })
   ageGroups?: string[];
 
-  @ApiPropertyOptional({ description: 'Body types' })
+  @ApiPropertyOptional({ description: 'Grade/Class levels' })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  bodyTypes?: string[];
+  gradeLevels?: string[];
+
+  @ApiPropertyOptional({ description: 'Subjects' })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  subjects?: string[];
+
+  // Uniform Filters
+  @ApiPropertyOptional({ description: 'Filter by uniforms only' })
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  isUniform?: boolean;
+
+  @ApiPropertyOptional({ description: 'Uniform types' })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  uniformTypes?: string[];
+
+  @ApiPropertyOptional({ description: 'Genders' })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  genders?: string[];
+
+  // Book Set Filters
+  @ApiPropertyOptional({ description: 'Filter by book sets only' })
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  isBookSet?: boolean;
+
+  @ApiPropertyOptional({ description: 'Book set types' })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  bookSetTypes?: string[];
+
+  @ApiPropertyOptional({ description: 'Class levels' })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  classLevels?: string[];
+
+  @ApiPropertyOptional({ description: 'School names' })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  schools?: string[];
+
+  @ApiPropertyOptional({ description: 'Educational boards (e.g., O-Levels Cambridge, Matric Punjab Board)' })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  boards?: string[];
 
   @ApiPropertyOptional({ description: 'Available sizes' })
   @IsOptional()

@@ -139,52 +139,72 @@ export class CreateProductDto {
   @IsArray()
   variations?: any[]; // Will be processed to create separate ProductVariation documents
 
-  // Pakistani Clothing Specific Fields
-  @ApiPropertyOptional({ description: 'Fabric type (e.g., Cotton, Silk, Lawn, Chiffon)' })
+  // Stationery & Book Specific Fields
+  @ApiPropertyOptional({ description: 'Material/Paper type (e.g., Cotton, Paper, Cardboard, Plastic)' })
   @IsOptional()
   @IsString()
-  fabric?: string;
+  material?: string;
 
-  @ApiPropertyOptional({ description: 'Collection name (e.g., Summer 2024, Eid Collection)' })
+  @ApiPropertyOptional({ description: 'Collection/Series name (e.g., Book Series Name)' })
   @IsOptional()
   @IsString()
   collectionName?: string;
 
-  @ApiPropertyOptional({ description: 'Occasion type (e.g., Formal, Casual, Wedding, Party)' })
+  @ApiPropertyOptional({ description: 'Use case (e.g., Educational, Professional, Personal, Art)' })
   @IsOptional()
   @IsString()
-  occasion?: string;
+  useCase?: string;
 
-  @ApiPropertyOptional({ description: 'Season (e.g., Summer, Winter, All Season)' })
+  @ApiPropertyOptional({ description: 'Subject area (e.g., Mathematics, Science, English)' })
   @IsOptional()
   @IsString()
-  season?: string;
+  subject?: string;
 
   @ApiPropertyOptional({ description: 'Care instructions' })
   @IsOptional()
   @IsString()
   careInstructions?: string;
 
-  @ApiPropertyOptional({ description: 'Model measurements for size reference' })
-  @IsOptional()
-  modelMeasurements?: {
-    height: string;
-    bust: string;
-    waist: string;
-    hips: string;
-    sizeWearing: string;
-  };
-
-  @ApiPropertyOptional({ description: 'Designer/Design House name' })
+  @ApiPropertyOptional({ description: 'Author name for books' })
   @IsOptional()
   @IsString()
-  designer?: string;
+  author?: string;
 
-  @ApiPropertyOptional({ description: 'Handwork details (e.g., Embroidery, Zari, Sequins)' })
+  @ApiPropertyOptional({ description: 'Publisher name' })
+  @IsOptional()
+  @IsString()
+  publisher?: string;
+
+  @ApiPropertyOptional({ description: 'ISBN for books' })
+  @IsOptional()
+  @IsString()
+  isbn?: string;
+
+  @ApiPropertyOptional({ description: 'Edition number (e.g., 1st Edition, 2024)' })
+  @IsOptional()
+  @IsString()
+  edition?: string;
+
+  @ApiPropertyOptional({ description: 'Number of pages' })
+  @IsOptional()
+  @IsNumber()
+  pageCount?: number;
+
+  @ApiPropertyOptional({ description: 'Language of the book (e.g., English, Urdu)' })
+  @IsOptional()
+  @IsString()
+  language?: string;
+
+  @ApiPropertyOptional({ description: 'Binding type (e.g., Hardcover, Paperback, Spiral)' })
+  @IsOptional()
+  @IsString()
+  bindingType?: string;
+
+  @ApiPropertyOptional({ description: 'Special features (e.g., Ruled lines, Perforated pages)' })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  handwork?: string[];
+  specialFeatures?: string[];
 
   @ApiPropertyOptional({ description: 'Color family (e.g., Pastels, Brights, Neutrals)' })
   @IsOptional()
@@ -196,36 +216,20 @@ export class CreateProductDto {
   @IsString()
   pattern?: string;
 
-  @ApiPropertyOptional({ description: 'Sleeve length (e.g., Sleeveless, Short, 3/4, Long)' })
+  @ApiPropertyOptional({ description: 'Format/Size (e.g., A4, A5, Letter size)' })
   @IsOptional()
   @IsString()
-  sleeveLength?: string;
+  format?: string;
 
-  @ApiPropertyOptional({ description: 'Neckline style (e.g., Round, V-neck, Boat, High)' })
-  @IsOptional()
-  @IsString()
-  neckline?: string;
-
-  @ApiPropertyOptional({ description: 'Length (e.g., Short, Medium, Long, Floor Length)' })
-  @IsOptional()
-  @IsString()
-  length?: string;
-
-  @ApiPropertyOptional({ description: 'Fit type (e.g., Loose, Fitted, Semi-fitted, Oversized)' })
-  @IsOptional()
-  @IsString()
-  fit?: string;
-
-  @ApiPropertyOptional({ description: 'Age group (e.g., Young Adult, Adult, Mature)' })
+  @ApiPropertyOptional({ description: 'Age group (e.g., 5-7 years, 8-10 years)' })
   @IsOptional()
   @IsString()
   ageGroup?: string;
 
-  @ApiPropertyOptional({ description: 'Body type suitability' })
+  @ApiPropertyOptional({ description: 'Grade/Class level (e.g., Class 1, Grade 5)' })
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  bodyType?: string[];
+  @IsString()
+  gradeLevel?: string;
 
   @ApiPropertyOptional({ description: 'Is this a limited edition item', default: false })
   @IsOptional()
@@ -248,15 +252,88 @@ export class CreateProductDto {
   @IsString()
   sizeChart?: string;
 
-  @ApiPropertyOptional({ description: 'Available sizes for this product' })
+  @ApiPropertyOptional({ description: 'Available sizes for this product (A4, A5, etc. for stationery, or S/M/L/XL for uniforms)' })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   availableSizes?: string[];
+
+  // Uniform Specific Fields
+  @ApiPropertyOptional({ description: 'Whether this product is a uniform', default: false })
+  @IsOptional()
+  @IsBoolean()
+  isUniform?: boolean;
+
+  @ApiPropertyOptional({ description: 'Uniform type (e.g., School Uniform, Sports Uniform)' })
+  @IsOptional()
+  @IsString()
+  uniformType?: string;
+
+  @ApiPropertyOptional({ description: 'Gender (Boys, Girls, Unisex)' })
+  @IsOptional()
+  @IsString()
+  gender?: string;
+
+  @ApiPropertyOptional({ description: 'Uniform size (S, M, L, XL, etc.)' })
+  @IsOptional()
+  @IsString()
+  uniformSize?: string;
+
+  // Book Set Specific Fields
+  @ApiPropertyOptional({ description: 'Whether this is a book set', default: false })
+  @IsOptional()
+  @IsBoolean()
+  isBookSet?: boolean;
+
+  @ApiPropertyOptional({ description: 'Book set type (class, school, subject, custom)' })
+  @IsOptional()
+  @IsString()
+  bookSetType?: string;
+
+  @ApiPropertyOptional({ description: 'Class/Grade level (e.g., Class 1, Grade 5)' })
+  @IsOptional()
+  @IsString()
+  classLevel?: string;
+
+  @ApiPropertyOptional({ description: 'School name for school-specific sets' })
+  @IsOptional()
+  @IsString()
+  schoolName?: string;
+
+  @ApiPropertyOptional({ description: 'Educational board (e.g., O-Levels Cambridge, Matric Punjab Board)' })
+  @IsOptional()
+  @IsString()
+  board?: string;
+
+  @ApiPropertyOptional({ description: 'Books included in the set' })
+  @IsOptional()
+  @IsArray()
+  setItems?: Array<{
+    bookId?: string;
+    bookName: string;
+    subject?: string;
+    quantity: number;
+  }>;
+
+  @ApiPropertyOptional({ description: 'Total number of books in the set' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  totalBooksInSet?: number;
 
   @ApiPropertyOptional({ description: 'Original/cost price (used for inventory cost calculation)' })
   @IsOptional()
   @IsNumber()
   @Min(0)
   originalPrice?: number;
+
+  @ApiPropertyOptional({ description: 'Is this product on sale' })
+  @IsOptional()
+  @IsBoolean()
+  isSale?: boolean;
+
+  @ApiPropertyOptional({ description: 'Stock availability status' })
+  @IsOptional()
+  @IsBoolean()
+  inStock?: boolean;
 } 

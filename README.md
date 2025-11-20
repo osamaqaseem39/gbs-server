@@ -1,6 +1,6 @@
-# 🚀 E-commerce NestJS API
+# 🚀 Gujrat Book Shop API
 
-A clean, scalable e-commerce API built with **NestJS** and **MongoDB**, following **SOLID principles** and implementing **Swagger documentation**.
+A clean, scalable e-commerce API for Gujrat Book Shop (stationery and books) built with **NestJS** and **MongoDB**, following **SOLID principles** and implementing **Swagger documentation**.
 
 ## ✨ Features
 
