@@ -322,7 +322,7 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "https://clothing-server-cyan.vercel.app",
+      "value": "https://gbs-server.vercel.app",
       "type": "string"
     },
     {
