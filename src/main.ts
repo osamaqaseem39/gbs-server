@@ -31,7 +31,7 @@ async function createApp(): Promise<NestExpressApplication> {
   app.useStaticAssets(join(__dirname, '..', 'public'));
 
   // CORS configuration tailored for Next.js (supports exact origins and suffix-based matches like .vercel.app)
-  const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,https://shestrends.com')
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,https://shestrends.com,https://gbs-dashboard-ten.vercel.app')
     .split(',')
     .map(o => o.trim())
     .filter(Boolean);
@@ -43,7 +43,10 @@ async function createApp(): Promise<NestExpressApplication> {
 
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
+      // Allow requests with no origin (like mobile apps, Postman, etc.)
+      if (!origin) {
+        return callback(null, true);
+      }
 
       const wildcardAllowed = allowedOrigins.includes('*');
       const exactAllowed = allowedOrigins.includes(origin);
@@ -53,6 +56,8 @@ async function createApp(): Promise<NestExpressApplication> {
         return callback(null, true);
       }
 
+      // Log for debugging (remove in production if needed)
+      console.warn(`CORS blocked origin: ${origin}. Allowed origins:`, allowedOrigins, 'Suffixes:', allowedOriginSuffixes);
       return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
