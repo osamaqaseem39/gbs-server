@@ -13,7 +13,14 @@ async function createApp(): Promise<NestExpressApplication> {
     return cachedApp;
   }
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  console.log('Initializing NestJS application...');
+  const startTime = Date.now();
+  
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger: process.env.NODE_ENV === 'production' ? ['error', 'warn'] : ['log', 'error', 'warn', 'debug'],
+  });
+  
+  console.log(`NestJS application created in ${Date.now() - startTime}ms`);
 
   // Get config service
   const configService = app.get(ConfigService);
@@ -27,8 +34,14 @@ async function createApp(): Promise<NestExpressApplication> {
     }),
   );
 
-  // Static assets from /public
-  app.useStaticAssets(join(__dirname, '..', 'public'));
+  // Static assets from /public (only if directory exists, skip in serverless if needed)
+  try {
+    const publicPath = join(__dirname, '..', 'public');
+    app.useStaticAssets(publicPath);
+  } catch (error) {
+    // Silently fail if public directory doesn't exist in serverless
+    console.warn('Static assets directory not found, skipping...');
+  }
 
   // CORS configuration tailored for Next.js (supports exact origins and suffix-based matches like .vercel.app)
   const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,https://shestrends.com,https://gbs-dashboard-ten.vercel.app')
@@ -86,8 +99,13 @@ async function createApp(): Promise<NestExpressApplication> {
     SwaggerModule.setup('api/docs', app, document);
   }
 
+  console.log('Initializing NestJS application...');
+  const initStartTime = Date.now();
   await app.init();
+  console.log(`NestJS application initialized in ${Date.now() - initStartTime}ms`);
+  
   cachedApp = app;
+  console.log('✅ NestJS application ready');
   return app;
 }
 

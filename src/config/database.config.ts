@@ -15,10 +15,12 @@ export const getDatabaseConfig = (configService: ConfigService): MongooseModuleO
   };
 
   const uri = getDbValue<string>('uri', 'MONGODB_URI', 'mongodb://localhost:27017/ecommerce');
-  const maxPoolSize = getDbValue<number>('maxPoolSize', 'MONGODB_MAX_POOL_SIZE', 10);
-  const minPoolSize = getDbValue<number>('minPoolSize', 'MONGODB_MIN_POOL_SIZE', 1);
-  const serverSelectionTimeout = getDbValue<number>('serverSelectionTimeout', 'MONGODB_SERVER_SELECTION_TIMEOUT', 5000);
-  const socketTimeout = getDbValue<number>('socketTimeout', 'MONGODB_SOCKET_TIMEOUT', 45000);
+  // Optimize for serverless: smaller pool sizes, faster timeouts
+  const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+  const maxPoolSize = getDbValue<number>('maxPoolSize', 'MONGODB_MAX_POOL_SIZE', isServerless ? 5 : 10);
+  const minPoolSize = getDbValue<number>('minPoolSize', 'MONGODB_MIN_POOL_SIZE', isServerless ? 0 : 1);
+  const serverSelectionTimeout = getDbValue<number>('serverSelectionTimeout', 'MONGODB_SERVER_SELECTION_TIMEOUT', isServerless ? 3000 : 5000);
+  const socketTimeout = getDbValue<number>('socketTimeout', 'MONGODB_SOCKET_TIMEOUT', isServerless ? 20000 : 45000);
   const bufferCommands = (() => {
     const fromConfigKey = configService.get('database.bufferCommands');
     if (fromConfigKey !== undefined) return fromConfigKey as boolean;
