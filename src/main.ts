@@ -36,7 +36,7 @@ async function createApp(): Promise<NestExpressApplication> {
     .map(o => o.trim())
     .filter(Boolean);
 
-  const allowedOriginSuffixes = (process.env.ALLOWED_ORIGIN_SUFFIXES || '.vercel.app')
+  const allowedOriginSuffixes = (process.env.ALLOWED_ORIGIN_SUFFIXES || '.vercel.app,.localhost')
     .split(',')
     .map(s => s.trim())
     .filter(Boolean);
@@ -62,9 +62,11 @@ async function createApp(): Promise<NestExpressApplication> {
     },
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Access-Control-Request-Method', 'Access-Control-Request-Headers'],
     exposedHeaders: ['Content-Range', 'X-Total-Count'],
-    maxAge: 600,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+    maxAge: 86400, // 24 hours
   });
 
   // Set global prefix
