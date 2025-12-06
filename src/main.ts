@@ -18,6 +18,7 @@ async function createApp(): Promise<NestExpressApplication> {
   
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: process.env.NODE_ENV === 'production' ? ['error', 'warn'] : ['log', 'error', 'warn', 'debug'],
+    abortOnError: false, // Don't abort on errors, let the app continue
   });
   
   console.log(`NestJS application created in ${Date.now() - startTime}ms`);
@@ -99,7 +100,6 @@ async function createApp(): Promise<NestExpressApplication> {
     SwaggerModule.setup('api/docs', app, document);
   }
 
-  console.log('Initializing NestJS application...');
   const initStartTime = Date.now();
   await app.init();
   console.log(`NestJS application initialized in ${Date.now() - initStartTime}ms`);

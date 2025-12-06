@@ -38,9 +38,19 @@ export const getDatabaseConfig = (configService: ConfigService): MongooseModuleO
     // Timeout options
     serverSelectionTimeoutMS: serverSelectionTimeout,
     socketTimeoutMS: socketTimeout,
+    connectTimeoutMS: isServerless ? 5000 : 10000,
 
     // Buffer options
     bufferCommands,
+    
+    // Serverless optimizations
+    ...(isServerless && {
+      // Don't wait for connection to be ready
+      bufferMaxEntries: 0,
+      // Retry connection
+      retryWrites: true,
+      retryReads: true,
+    }),
 
     // Connection event handlers
     connectionFactory: (connection) => {
