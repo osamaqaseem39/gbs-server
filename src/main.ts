@@ -44,7 +44,7 @@ async function createApp(): Promise<NestExpressApplication> {
     console.warn('Static assets directory not found, skipping...');
   }
 
-  // CORS configuration tailored for Next.js (supports exact origins and suffix-based matches like .vercel.app)
+  // CORS configuration
   const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,https://shestrends.com,https://gbs-dashboard-ten.vercel.app')
     .split(',')
     .map(o => o.trim())
@@ -109,15 +109,7 @@ async function createApp(): Promise<NestExpressApplication> {
   return app;
 }
 
-// Export the createApp function for Vercel
 export { createApp };
-
-// For Vercel serverless
-export default async function handler(req: any, res: any) {
-  const app = await createApp();
-  const server = app.getHttpAdapter().getInstance();
-  server(req, res);
-}
 
 // For local development
 if (process.env.NODE_ENV !== 'production') {
