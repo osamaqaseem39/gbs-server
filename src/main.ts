@@ -47,30 +47,51 @@ async function createApp(): Promise<NestExpressApplication> {
   // CORS configuration
   const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,https://shestrends.com,https://gbs-dashboard-ten.vercel.app')
     .split(',')
-    .map(o => o.trim())
+    .map(o => o.trim().toLowerCase())
     .filter(Boolean);
 
   const allowedOriginSuffixes = (process.env.ALLOWED_ORIGIN_SUFFIXES || '.vercel.app,.localhost')
     .split(',')
-    .map(s => s.trim())
+    .map(s => s.trim().toLowerCase())
     .filter(Boolean);
+
+  console.log('CORS Configuration:', {
+    allowedOrigins,
+    allowedOriginSuffixes,
+    nodeEnv: process.env.NODE_ENV,
+    vercel: !!process.env.VERCEL,
+  });
 
   app.enableCors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps, Postman, etc.)
       if (!origin) {
+        console.log('CORS: Allowing request with no origin');
         return callback(null, true);
       }
+
+      // Normalize origin to lowercase for comparison
+      const normalizedOrigin = origin.toLowerCase();
 
       const wildcardAllowed = allowedOrigins.includes('*');
-      const exactAllowed = allowedOrigins.includes(origin);
-      const suffixAllowed = allowedOriginSuffixes.some(suffix => origin.endsWith(suffix));
+      const exactAllowed = allowedOrigins.includes(normalizedOrigin);
+      const suffixAllowed = allowedOriginSuffixes.some(suffix => {
+        const matches = normalizedOrigin.endsWith(suffix);
+        if (matches) {
+          console.log(`CORS: Origin ${origin} matched suffix ${suffix}`);
+        }
+        return matches;
+      });
 
-      if (wildcardAllowed || exactAllowed || suffixAllowed) {
+      // Also check if origin contains vercel.app (for any vercel deployment)
+      const isVercelApp = normalizedOrigin.includes('.vercel.app');
+
+      if (wildcardAllowed || exactAllowed || suffixAllowed || isVercelApp) {
+        console.log(`CORS: Allowing origin ${origin} (wildcard: ${wildcardAllowed}, exact: ${exactAllowed}, suffix: ${suffixAllowed}, vercel: ${isVercelApp})`);
         return callback(null, true);
       }
 
-      // Log for debugging (remove in production if needed)
+      // Log for debugging
       console.warn(`CORS blocked origin: ${origin}. Allowed origins:`, allowedOrigins, 'Suffixes:', allowedOriginSuffixes);
       return callback(new Error('Not allowed by CORS'));
     },
