@@ -44,80 +44,36 @@ async function createApp(): Promise<NestExpressApplication> {
     console.warn('Static assets directory not found, skipping...');
   }
 
-  // CORS configuration
-  const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || 'http://localhost:3000,https://shestrends.com,https://gbs-dashboard-ten.vercel.app';
-  const allowedOrigins = allowedOriginsEnv
+  // CORS configuration tailored for Next.js (supports exact origins and suffix-based matches like .vercel.app)
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,https://shestrends.com,https://www.shestrends.com')
     .split(',')
     .map(o => o.trim())
     .filter(Boolean);
 
-  const allowedOriginSuffixesEnv = process.env.ALLOWED_ORIGIN_SUFFIXES || '.vercel.app,.localhost';
-  const allowedOriginSuffixes = allowedOriginSuffixesEnv
+  const allowedOriginSuffixes = (process.env.ALLOWED_ORIGIN_SUFFIXES || '.vercel.app')
     .split(',')
-    .map(s => s.trim().toLowerCase())
+    .map(s => s.trim())
     .filter(Boolean);
-
-  console.log('CORS Configuration:', {
-    allowedOrigins,
-    allowedOriginSuffixes,
-    nodeEnv: process.env.NODE_ENV,
-    vercel: !!process.env.VERCEL,
-  });
 
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, Postman, etc.)
-      if (!origin) {
-        console.log('CORS: Allowing request with no origin');
+      if (!origin) return callback(null, true);
+
+      const wildcardAllowed = allowedOrigins.includes('*');
+      const exactAllowed = allowedOrigins.includes(origin);
+      const suffixAllowed = allowedOriginSuffixes.some(suffix => origin.endsWith(suffix));
+
+      if (wildcardAllowed || exactAllowed || suffixAllowed) {
         return callback(null, true);
       }
 
-      // Normalize origin to lowercase for comparison
-      const normalizedOrigin = origin.toLowerCase();
-
-      // Check for wildcard
-      const wildcardAllowed = allowedOrigins.some(o => o.toLowerCase() === '*');
-      
-      // Check for exact match (case-insensitive)
-      const exactAllowed = allowedOrigins.some(o => o.toLowerCase() === normalizedOrigin);
-      
-      // Check for suffix match
-      const suffixAllowed = allowedOriginSuffixes.some(suffix => {
-        const matches = normalizedOrigin.endsWith(suffix);
-        if (matches) {
-          console.log(`CORS: Origin ${origin} matched suffix ${suffix}`);
-        }
-        return matches;
-      });
-
-      // Also check if origin contains vercel.app (for any vercel deployment)
-      const isVercelApp = normalizedOrigin.includes('.vercel.app');
-
-      if (wildcardAllowed || exactAllowed || suffixAllowed || isVercelApp) {
-        console.log(`CORS: Allowing origin ${origin} (wildcard: ${wildcardAllowed}, exact: ${exactAllowed}, suffix: ${suffixAllowed}, vercel: ${isVercelApp})`);
-        return callback(null, true);
-      }
-
-      // Log for debugging
-      console.warn(`CORS blocked origin: ${origin}. Allowed origins:`, allowedOrigins, 'Suffixes:', allowedOriginSuffixes);
       return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type', 
-      'Authorization', 
-      'X-Requested-With', 
-      'Accept', 
-      'Origin', 
-      'Access-Control-Request-Method', 
-      'Access-Control-Request-Headers',
-      'X-API-Key'
-    ],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
     exposedHeaders: ['Content-Range', 'X-Total-Count'],
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-    maxAge: 86400, // 24 hours
+    maxAge: 600,
   });
 
   // Set global prefix

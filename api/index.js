@@ -8,22 +8,37 @@ module.exports = async (req, res) => {
   // Handle CORS preflight requests explicitly
   if (req.method === 'OPTIONS') {
     const origin = req.headers.origin || req.headers.Origin;
-    const allowedOrigins = process.env.ALLOWED_ORIGINS 
-      ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-      : ['http://localhost:3000', 'https://shestrends.com', 'https://gbs-dashboard-ten.vercel.app'];
     
-    const isAllowed = !origin || 
-      allowedOrigins.includes(origin) || 
-      allowedOrigins.includes('*') ||
-      origin.includes('.vercel.app') ||
-      origin.endsWith('.vercel.app');
-    
-    if (isAllowed) {
-      res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    // CORS configuration tailored for Next.js (supports exact origins and suffix-based matches like .vercel.app)
+    const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,https://shestrends.com,https://www.shestrends.com')
+      .split(',')
+      .map(o => o.trim())
+      .filter(Boolean);
+
+    const allowedOriginSuffixes = (process.env.ALLOWED_ORIGIN_SUFFIXES || '.vercel.app')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    if (!origin) {
+      res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers, X-API-Key');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
       res.setHeader('Access-Control-Allow-Credentials', 'true');
-      res.setHeader('Access-Control-Max-Age', '86400');
+      res.setHeader('Access-Control-Max-Age', '600');
+      return res.status(204).end();
+    }
+
+    const wildcardAllowed = allowedOrigins.includes('*');
+    const exactAllowed = allowedOrigins.includes(origin);
+    const suffixAllowed = allowedOriginSuffixes.some(suffix => origin.endsWith(suffix));
+
+    if (wildcardAllowed || exactAllowed || suffixAllowed) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Max-Age', '600');
       return res.status(204).end();
     }
   }
@@ -39,20 +54,26 @@ module.exports = async (req, res) => {
     // Set CORS headers for all responses (before processing)
     const origin = req.headers.origin || req.headers.Origin;
     if (origin) {
-      const allowedOrigins = process.env.ALLOWED_ORIGINS 
-        ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-        : ['http://localhost:3000', 'https://shestrends.com', 'https://gbs-dashboard-ten.vercel.app'];
-      
-      const isAllowed = allowedOrigins.includes(origin) || 
-        allowedOrigins.includes('*') ||
-        origin.includes('.vercel.app') ||
-        origin.endsWith('.vercel.app');
-      
-      if (isAllowed) {
+      // CORS configuration tailored for Next.js (supports exact origins and suffix-based matches like .vercel.app)
+      const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,https://shestrends.com,https://www.shestrends.com')
+        .split(',')
+        .map(o => o.trim())
+        .filter(Boolean);
+
+      const allowedOriginSuffixes = (process.env.ALLOWED_ORIGIN_SUFFIXES || '.vercel.app')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      const wildcardAllowed = allowedOrigins.includes('*');
+      const exactAllowed = allowedOrigins.includes(origin);
+      const suffixAllowed = allowedOriginSuffixes.some(suffix => origin.endsWith(suffix));
+
+      if (wildcardAllowed || exactAllowed || suffixAllowed) {
         res.setHeader('Access-Control-Allow-Origin', origin);
         res.setHeader('Access-Control-Allow-Credentials', 'true');
         res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers, X-API-Key');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
       }
     }
     
