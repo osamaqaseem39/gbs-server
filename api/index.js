@@ -5,12 +5,55 @@ let cachedApp;
 module.exports = async (req, res) => {
   const requestStartTime = Date.now();
   
+  // Handle CORS preflight requests explicitly
+  if (req.method === 'OPTIONS') {
+    const origin = req.headers.origin || req.headers.Origin;
+    const allowedOrigins = process.env.ALLOWED_ORIGINS 
+      ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+      : ['http://localhost:3000', 'https://shestrends.com', 'https://gbs-dashboard-ten.vercel.app'];
+    
+    const isAllowed = !origin || 
+      allowedOrigins.includes(origin) || 
+      allowedOrigins.includes('*') ||
+      origin.includes('.vercel.app') ||
+      origin.endsWith('.vercel.app');
+    
+    if (isAllowed) {
+      res.setHeader('Access-Control-Allow-Origin', origin || '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers, X-API-Key');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Max-Age', '86400');
+      return res.status(204).end();
+    }
+  }
+  
   try {
     // Get or create the cached app
     if (!cachedApp) {
       console.log('🚀 Creating NestJS app for serverless function...');
       cachedApp = await createApp();
       console.log(`✅ App ready after ${Date.now() - requestStartTime}ms`);
+    }
+    
+    // Set CORS headers for all responses (before processing)
+    const origin = req.headers.origin || req.headers.Origin;
+    if (origin) {
+      const allowedOrigins = process.env.ALLOWED_ORIGINS 
+        ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+        : ['http://localhost:3000', 'https://shestrends.com', 'https://gbs-dashboard-ten.vercel.app'];
+      
+      const isAllowed = allowedOrigins.includes(origin) || 
+        allowedOrigins.includes('*') ||
+        origin.includes('.vercel.app') ||
+        origin.endsWith('.vercel.app');
+      
+      if (isAllowed) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers, X-API-Key');
+      }
     }
     
     // Use NestJS HTTP adapter to handle the request

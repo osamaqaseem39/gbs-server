@@ -45,12 +45,14 @@ async function createApp(): Promise<NestExpressApplication> {
   }
 
   // CORS configuration
-  const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,https://shestrends.com,https://gbs-dashboard-ten.vercel.app')
+  const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || 'http://localhost:3000,https://shestrends.com,https://gbs-dashboard-ten.vercel.app';
+  const allowedOrigins = allowedOriginsEnv
     .split(',')
-    .map(o => o.trim().toLowerCase())
+    .map(o => o.trim())
     .filter(Boolean);
 
-  const allowedOriginSuffixes = (process.env.ALLOWED_ORIGIN_SUFFIXES || '.vercel.app,.localhost')
+  const allowedOriginSuffixesEnv = process.env.ALLOWED_ORIGIN_SUFFIXES || '.vercel.app,.localhost';
+  const allowedOriginSuffixes = allowedOriginSuffixesEnv
     .split(',')
     .map(s => s.trim().toLowerCase())
     .filter(Boolean);
@@ -73,8 +75,13 @@ async function createApp(): Promise<NestExpressApplication> {
       // Normalize origin to lowercase for comparison
       const normalizedOrigin = origin.toLowerCase();
 
-      const wildcardAllowed = allowedOrigins.includes('*');
-      const exactAllowed = allowedOrigins.includes(normalizedOrigin);
+      // Check for wildcard
+      const wildcardAllowed = allowedOrigins.some(o => o.toLowerCase() === '*');
+      
+      // Check for exact match (case-insensitive)
+      const exactAllowed = allowedOrigins.some(o => o.toLowerCase() === normalizedOrigin);
+      
+      // Check for suffix match
       const suffixAllowed = allowedOriginSuffixes.some(suffix => {
         const matches = normalizedOrigin.endsWith(suffix);
         if (matches) {
@@ -97,7 +104,16 @@ async function createApp(): Promise<NestExpressApplication> {
     },
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Access-Control-Request-Method', 'Access-Control-Request-Headers'],
+    allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'X-Requested-With', 
+      'Accept', 
+      'Origin', 
+      'Access-Control-Request-Method', 
+      'Access-Control-Request-Headers',
+      'X-API-Key'
+    ],
     exposedHeaders: ['Content-Range', 'X-Total-Count'],
     preflightContinue: false,
     optionsSuccessStatus: 204,
