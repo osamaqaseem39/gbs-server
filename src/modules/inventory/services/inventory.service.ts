@@ -10,7 +10,6 @@ import { TransferStockDto } from '../dto/transfer-stock.dto';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { PaginatedResult } from '../../../common/interfaces/base.interface';
 import { ProductService } from '../../product/services/product.service';
-import { StockStatus } from '../../product/schemas/product.schema';
 
 @Injectable()
 export class InventoryService {
@@ -19,22 +18,6 @@ export class InventoryService {
     @InjectModel(InventoryMovement.name) private movementModel: Model<InventoryMovementDocument>,
     @Inject(forwardRef(() => ProductService)) private productService: ProductService,
   ) {}
-
-  // Helper function to map Inventory status to Product StockStatus
-  private mapInventoryStatusToStockStatus(status: string): StockStatus {
-    switch (status) {
-      case 'in_stock':
-        return StockStatus.INSTOCK;
-      case 'out_of_stock':
-        return StockStatus.OUTOFSTOCK;
-      case 'low_stock':
-        return StockStatus.INSTOCK; // Low stock is still in stock
-      case 'discontinued':
-        return StockStatus.OUTOFSTOCK;
-      default:
-        return StockStatus.INSTOCK;
-    }
-  }
 
   // Helper function to sync inventory changes back to product
   private async syncToProduct(inventory: Inventory): Promise<void> {
@@ -47,11 +30,10 @@ export class InventoryService {
       }
 
       // Update product with inventory data using the public sync method
+      // Note: Price information is in ProductVariation, not Inventory
       await this.productService.syncInventoryToProduct(inventory.productId, {
         stockQuantity: inventory.currentStock,
-        stockStatus: this.mapInventoryStatusToStockStatus(inventory.status),
-        price: inventory.sellingPrice,
-        originalPrice: inventory.costPrice,
+        status: inventory.status,
       });
     } catch (error) {
       // Log error but don't fail inventory update
@@ -219,10 +201,9 @@ export class InventoryService {
     }
 
     inventory.currentStock = newStock;
-    inventory.availableStock = newStock - inventory.reservedStock;
+    // availableStock is computed: currentStock - reservedStock
     await this.inventoryModel.findByIdAndUpdate(id, { 
       currentStock: newStock,
-      availableStock: newStock - inventory.reservedStock,
     });
 
     // Record movement
@@ -267,18 +248,14 @@ export class InventoryService {
 
     await this.inventoryModel.findByIdAndUpdate(id, { 
       currentStock: newFromStock,
-      availableStock: newFromStock - fromInventory.reservedStock,
     });
     await this.inventoryModel.findByIdAndUpdate(toInventory._id, { 
       currentStock: newToStock,
-      availableStock: newToStock - toInventory.reservedStock,
     });
 
     // Update local objects for sync
     fromInventory.currentStock = newFromStock;
-    fromInventory.availableStock = newFromStock - fromInventory.reservedStock;
     toInventory.currentStock = newToStock;
-    toInventory.availableStock = newToStock - toInventory.reservedStock;
 
     // Record movements
     await this.recordMovement({

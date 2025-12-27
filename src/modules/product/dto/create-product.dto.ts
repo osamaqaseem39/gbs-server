@@ -1,6 +1,7 @@
 import { IsString, IsNumber, IsOptional, IsEnum, IsArray, IsBoolean, Min, IsUrl, ValidateNested } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ProductType, StockStatus, ProductStatus } from '../schemas/product.schema';
+import { ProductType, ProductStatus } from '../schemas/product.schema';
+import { VariationStockStatus } from '../schemas/product-variation.schema';
 import { Type } from 'class-transformer';
 
 class ProductColorDto {
@@ -60,9 +61,9 @@ export class CreateProductDto {
   @Min(0)
   stockQuantity: number;
 
-  @ApiProperty({ enum: StockStatus, description: 'Stock status' })
-  @IsEnum(StockStatus)
-  stockStatus: StockStatus;
+  @ApiProperty({ enum: VariationStockStatus, description: 'Stock status' })
+  @IsEnum(VariationStockStatus)
+  stockStatus: VariationStockStatus;
 
   @ApiPropertyOptional({ description: 'Product weight' })
   @IsOptional()

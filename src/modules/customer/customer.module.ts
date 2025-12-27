@@ -4,12 +4,14 @@ import { CustomerController } from './controllers/customer.controller';
 import { CustomerService } from './services/customer.service';
 import { CustomerRepository } from './repositories/customer.repository';
 import { Customer, CustomerSchema } from './schemas/customer.schema';
+import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Customer.name, schema: CustomerSchema },
     ]),
+    UserModule,
   ],
   controllers: [CustomerController],
   providers: [CustomerService, CustomerRepository],

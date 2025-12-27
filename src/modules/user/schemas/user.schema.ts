@@ -45,6 +45,10 @@ export class User {
   @Prop()
   lastLoginAt?: Date;
 
+  @ApiProperty({ description: 'Password changed timestamp' })
+  @Prop()
+  passwordChangedAt?: Date;
+
   @ApiProperty({ enum: ['customer', 'admin'], description: 'User type' })
   @Prop({ required: true, enum: ['customer', 'admin'] })
   userType: 'customer' | 'admin';

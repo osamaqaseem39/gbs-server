@@ -41,25 +41,36 @@ export class CartService extends BaseService<CartDocument> {
     return cart;
   }
 
+  async findById(id: string): Promise<CartDocument> {
+    const cart = await this.cartRepository.findById(id);
+    if (!cart) {
+      throw new NotFoundException(`Cart with ID '${id}' not found`);
+    }
+    return cart;
+  }
+
   async addItemToCart(cartId: string, addToCartDto: AddToCartDto): Promise<CartDocument> {
     // Check if cart exists
-    await this.findById(cartId);
-
-    // Check if item already exists in cart
     const cart = await this.findById(cartId);
-    const existingItemIndex = cart.items.findIndex(
-      item => item.productId.toString() === addToCartDto.productId &&
-              (addToCartDto.variationId ? item.variationId?.toString() === addToCartDto.variationId : !item.variationId)
+
+    // Check if item already exists in cart (items are populated CartItem documents)
+    const items = cart.items as any[];
+    const existingItem = items.find(
+      item => {
+        const itemDoc = item as any;
+        return itemDoc.productId?.toString() === addToCartDto.productId &&
+               (addToCartDto.variationId ? itemDoc.variationId?.toString() === addToCartDto.variationId : !itemDoc.variationId);
+      }
     );
 
-    if (existingItemIndex !== -1) {
+    if (existingItem) {
       // Update existing item quantity
-      const existingItem = cart.items[existingItemIndex];
-      const newQuantity = existingItem.quantity + addToCartDto.quantity;
+      const itemDoc = existingItem as any;
+      const newQuantity = itemDoc.quantity + addToCartDto.quantity;
       return await this.updateCartItemQuantity(cartId, addToCartDto.productId, addToCartDto.variationId || null, newQuantity);
     }
 
-    // Add new item
+    // Add new item (price should be fetched from product service in a real implementation)
     const newItem = {
       productId: addToCartDto.productId,
       variationId: addToCartDto.variationId,
@@ -122,12 +133,14 @@ export class CartService extends BaseService<CartDocument> {
       customerCart = await this.createCart(customerId);
     }
 
-    // Merge items from guest cart to customer cart
-    for (const item of guestCart.items) {
+    // Merge items from guest cart to customer cart (items are populated CartItem documents)
+    const items = guestCart.items as any[];
+    for (const item of items) {
+      const itemDoc = item as any;
       await this.addItemToCart(customerCart._id, {
-        productId: item.productId.toString(),
-        variationId: item.variationId?.toString(),
-        quantity: item.quantity,
+        productId: itemDoc.productId?.toString() || '',
+        variationId: itemDoc.variationId?.toString(),
+        quantity: itemDoc.quantity,
       });
     }
 
@@ -139,7 +152,11 @@ export class CartService extends BaseService<CartDocument> {
 
   async calculateCartTotal(cartId: string): Promise<number> {
     const cart = await this.findById(cartId);
-    const total = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const items = cart.items as any[];
+    const total = items.reduce((sum, item) => {
+      const itemDoc = item as any;
+      return sum + (itemDoc.price * itemDoc.quantity);
+    }, 0);
     
     // Update cart total
     await this.cartRepository.update(cartId, { total });

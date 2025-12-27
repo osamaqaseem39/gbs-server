@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, ConflictException }
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Payment, PaymentDocument, PaymentStatus } from '../schemas/payment.schema';
+import { PaymentMethod, PaymentMethodDocument } from '../schemas/payment-method.schema';
 import { CreatePaymentDto } from '../dto/create-payment.dto';
 import { UpdatePaymentDto } from '../dto/update-payment.dto';
 import { PaginationOptions, PaginatedResult } from '../../../common/interfaces/base.interface';
@@ -10,6 +11,7 @@ import { PaginationOptions, PaginatedResult } from '../../../common/interfaces/b
 export class PaymentService {
   constructor(
     @InjectModel(Payment.name) private readonly paymentModel: Model<PaymentDocument>,
+    @InjectModel(PaymentMethod.name) private readonly paymentMethodModel: Model<PaymentMethodDocument>,
   ) {}
 
   async createPayment(createPaymentDto: CreatePaymentDto): Promise<PaymentDocument> {
@@ -27,13 +29,37 @@ export class PaymentService {
       throw new BadRequestException('Payment amount must be greater than 0');
     }
 
+    // Convert method (code) to paymentMethodId if needed
+    let paymentMethodId = (createPaymentDto as any).paymentMethodId;
+    if (!paymentMethodId && createPaymentDto.method) {
+      // Find PaymentMethod by code
+      const paymentMethod = await this.paymentMethodModel.findOne({ 
+        code: createPaymentDto.method.toLowerCase() 
+      });
+      if (!paymentMethod) {
+        throw new BadRequestException(`Payment method '${createPaymentDto.method}' not found`);
+      }
+      paymentMethodId = paymentMethod._id;
+    }
+
     // For COD orders, set status to PENDING by default
-    if (createPaymentDto.method.toLowerCase() === 'cash_on_delivery' || 
-        createPaymentDto.method.toLowerCase() === 'cod') {
+    if (createPaymentDto.method && (
+        createPaymentDto.method.toLowerCase() === 'cash_on_delivery' || 
+        createPaymentDto.method.toLowerCase() === 'cod')) {
       createPaymentDto.status = PaymentStatus.PENDING;
     }
 
-    const payment = new this.paymentModel(createPaymentDto);
+    const paymentData: any = {
+      orderId: createPaymentDto.orderId,
+      paymentMethodId,
+      amount: createPaymentDto.amount,
+      currency: createPaymentDto.currency || 'PKR',
+      status: createPaymentDto.status || PaymentStatus.PENDING,
+      transactionId: createPaymentDto.transactionId,
+      gatewayResponse: createPaymentDto.processorResponse,
+    };
+
+    const payment = new this.paymentModel(paymentData);
     return await payment.save();
   }
 
@@ -91,14 +117,21 @@ export class PaymentService {
 
   // COD-specific methods
   async markCODPaymentReceived(orderId: string, amount: number, notes?: string): Promise<PaymentDocument> {
-    const payment = await this.findByOrderId(orderId);
+    const payment = await this.paymentModel.findOne({ orderId })
+      .populate('paymentMethodId')
+      .exec();
     
     if (!payment) {
       throw new NotFoundException(`Payment not found for order ${orderId}`);
     }
 
-    if (payment.method.toLowerCase() !== 'cash_on_delivery' && 
-        payment.method.toLowerCase() !== 'cod') {
+    const paymentMethod = payment.paymentMethodId as any;
+    if (!paymentMethod) {
+      throw new BadRequestException('Payment method not found');
+    }
+
+    const methodCode = paymentMethod.code?.toLowerCase();
+    if (methodCode !== 'cash_on_delivery' && methodCode !== 'cod') {
       throw new BadRequestException('This payment is not a COD payment');
     }
 
@@ -108,21 +141,27 @@ export class PaymentService {
 
     // Update payment status to completed
     payment.status = PaymentStatus.COMPLETED;
-    // Persist optional notes via metadata
+    payment.paidAt = new Date();
+    // Notes can be stored in gatewayResponse if needed
     if (notes) {
-      const metadata = payment.metadata || {};
-      metadata.codNotes = notes;
-      payment.metadata = metadata;
+      payment.gatewayResponse = { ...payment.gatewayResponse, codNotes: notes };
     }
 
     return await payment.save();
   }
 
   async getCODPendingPayments(): Promise<PaymentDocument[]> {
+    // Find COD payment methods
+    const codMethods = await this.paymentMethodModel.find({
+      code: { $in: ['cash_on_delivery', 'cod'] }
+    }).exec();
+    
+    const codMethodIds = codMethods.map(m => m._id);
+    
     return await this.paymentModel.find({
-      method: { $in: ['cash_on_delivery', 'cod'] },
+      paymentMethodId: { $in: codMethodIds },
       status: PaymentStatus.PENDING
-    }).populate('orderId').exec();
+    }).populate('orderId').populate('paymentMethodId').exec();
   }
 
   async getPaymentStats(): Promise<{
@@ -132,6 +171,13 @@ export class PaymentService {
     completedPayments: number;
     codPayments: number;
   }> {
+    // Find COD payment methods
+    const codMethods = await this.paymentMethodModel.find({
+      code: { $in: ['cash_on_delivery', 'cod'] }
+    }).exec();
+    
+    const codMethodIds = codMethods.map(m => m._id);
+
     const [
       totalPayments,
       totalAmount,
@@ -146,7 +192,7 @@ export class PaymentService {
       this.paymentModel.countDocuments({ status: PaymentStatus.PENDING }),
       this.paymentModel.countDocuments({ status: PaymentStatus.COMPLETED }),
       this.paymentModel.countDocuments({ 
-        method: { $in: ['cash_on_delivery', 'cod'] } 
+        paymentMethodId: { $in: codMethodIds } 
       })
     ]);
 

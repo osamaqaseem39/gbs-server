@@ -19,7 +19,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     const customer = await this.customerService.findById(payload.sub);
-    if (!customer || !customer.isActive) {
+    if (!customer) {
+      throw new UnauthorizedException('Invalid token');
+    }
+    const customerDoc = customer as any;
+    const user = customerDoc.userId;
+    if (!user || !user.isActive) {
       throw new UnauthorizedException('Invalid token');
     }
     return payload;

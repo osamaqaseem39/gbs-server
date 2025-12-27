@@ -14,23 +14,25 @@ export class AuthService {
 
   async register(registerDto: RegisterDto) {
     // Check if customer already exists
-    const existingCustomer = await this.customerService.findByEmail(registerDto.email);
-    if (existingCustomer) {
-      throw new ConflictException('Customer with this email already exists');
+    try {
+      const existingCustomer = await this.customerService.findByEmail(registerDto.email);
+      if (existingCustomer) {
+        throw new ConflictException('Customer with this email already exists');
+      }
+    } catch (error) {
+      if (error.message && error.message.includes('not found')) {
+        // Customer doesn't exist, continue
+      } else {
+        throw error;
+      }
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+    // Create customer (service will handle user creation)
+    const customer = await this.customerService.createCustomer(registerDto);
 
-    // Create customer
-    const customerData = {
-      ...registerDto,
-      password: hashedPassword,
-      isActive: true,
-      emailVerified: false,
-    };
-
-    const customer = await this.customerService.createCustomer(customerData);
+    // Get populated customer with user data
+    const customerWithUser = customer as any;
+    const user = customerWithUser.userId;
 
     // Generate tokens
     const tokens = await this.generateTokens(customer);
@@ -38,12 +40,12 @@ export class AuthService {
     return {
       user: {
         _id: customer._id,
-        firstName: customer.firstName,
-        lastName: customer.lastName,
-        email: customer.email,
-        phone: customer.phone,
-        isActive: customer.isActive,
-        emailVerified: customer.emailVerified,
+        firstName: user?.firstName || '',
+        lastName: user?.lastName || '',
+        email: user?.email || '',
+        phone: user?.phone || '',
+        isActive: user?.isActive || false,
+        emailVerified: user?.emailVerified || false,
         createdAt: customer.createdAt,
       },
       ...tokens,
@@ -56,11 +58,17 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (!customer.isActive) {
+    const customerDoc = customer as any;
+    const user = customerDoc.userId;
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!user.isActive) {
       throw new UnauthorizedException('Account is deactivated');
     }
 
-    const isPasswordValid = await bcrypt.compare(password, customer.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -71,21 +79,27 @@ export class AuthService {
   async login(customer: Customer) {
     const tokens = await this.generateTokens(customer);
 
-    // Update last login
-    await this.customerService.updateCustomer(customer._id, {
-      lastLoginAt: new Date(),
-    });
+    // Update last login - need to update user, not customer
+    const customerDoc = customer as any;
+    if (customerDoc.userId) {
+      await this.customerService.updateCustomer(customer._id, {
+        lastLoginAt: new Date(),
+      } as any);
+    }
+
+    const customerWithUser = customer as any;
+    const user = customerWithUser.userId;
 
     return {
       user: {
         _id: customer._id,
-        firstName: customer.firstName,
-        lastName: customer.lastName,
-        email: customer.email,
-        phone: customer.phone,
-        isActive: customer.isActive,
-        emailVerified: customer.emailVerified,
-        lastLoginAt: customer.lastLoginAt,
+        firstName: user?.firstName || '',
+        lastName: user?.lastName || '',
+        email: user?.email || '',
+        phone: user?.phone || '',
+        isActive: user?.isActive || false,
+        emailVerified: user?.emailVerified || false,
+        lastLoginAt: user?.lastLoginAt,
       },
       ...tokens,
     };
@@ -97,15 +111,18 @@ export class AuthService {
       throw new UnauthorizedException('Customer not found');
     }
 
+    const customerDoc = customer as any;
+    const user = customerDoc.userId;
+
     return {
       _id: customer._id,
-      firstName: customer.firstName,
-      lastName: customer.lastName,
-      email: customer.email,
-      phone: customer.phone,
-      dateOfBirth: customer.dateOfBirth,
-      isActive: customer.isActive,
-      emailVerified: customer.emailVerified,
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      dateOfBirth: user?.dateOfBirth,
+      isActive: user?.isActive || false,
+      emailVerified: user?.emailVerified || false,
       createdAt: customer.createdAt,
       updatedAt: customer.updatedAt,
     };
@@ -148,24 +165,30 @@ export class AuthService {
 
   async resetPassword(token: string, newPassword: string) {
     const customer = await this.customerService.findByResetToken(token);
-    if (!customer || customer.resetPasswordExpires < new Date()) {
+    if (!customer) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    const customerDoc = customer as any;
+    const user = customerDoc.userId;
+    if (!user || !user.resetPasswordExpires || user.resetPasswordExpires < new Date()) {
       throw new BadRequestException('Invalid or expired reset token');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await this.customerService.updateCustomer(customer._id, {
-      password: hashedPassword,
-      resetPasswordToken: null,
-      resetPasswordExpires: null,
-    });
+    // Update password through customer service which will update user
+    await this.customerService.updatePassword(customer._id, user.password, newPassword);
   }
 
   private async generateTokens(customer: Customer) {
+    const customerDoc = customer as any;
+    const user = customerDoc.userId;
+
     const payload = {
       sub: customer._id,
-      email: customer.email,
-      firstName: customer.firstName,
-      lastName: customer.lastName,
+      email: user?.email || '',
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
     };
 
     const accessToken = this.jwtService.sign(payload);
