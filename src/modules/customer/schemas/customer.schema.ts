@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 
 export type CustomerDocument = Customer & Document;
@@ -9,117 +9,21 @@ export class Customer {
   @ApiProperty({ description: 'Customer ID' })
   _id: string;
 
-  @ApiProperty({ description: 'First name' })
-  @Prop({ required: true, trim: true })
-  firstName: string;
+  @ApiProperty({ description: 'User ID (reference to User entity)' })
+  @Prop({ required: true, type: MongooseSchema.Types.ObjectId, ref: 'User', unique: true })
+  userId: string;
 
-  @ApiProperty({ description: 'Last name' })
-  @Prop({ required: true, trim: true })
-  lastName: string;
+  @ApiProperty({ description: 'Loyalty points' })
+  @Prop({ default: 0, min: 0 })
+  loyaltyPoints: number;
 
-  @ApiProperty({ description: 'Email address' })
-  @Prop({ required: true, unique: true, trim: true, lowercase: true })
-  email: string;
+  @ApiProperty({ description: 'Preferred currency' })
+  @Prop({ default: 'PKR' })
+  preferredCurrency: string;
 
-  @ApiProperty({ description: 'Phone number' })
-  @Prop({ trim: true })
-  phone?: string;
-
-  @ApiProperty({ description: 'Hashed password' })
-  @Prop({ required: true })
-  password: string;
-
-  @ApiProperty({ description: 'Date of birth' })
-  @Prop()
-  dateOfBirth?: Date;
-
-  @ApiProperty({ description: 'Whether customer is active' })
-  @Prop({ default: true })
-  isActive: boolean;
-
-  @ApiProperty({ description: 'Whether email is verified' })
-  @Prop({ default: false })
-  emailVerified: boolean;
-
-  @ApiProperty({ description: 'Last login timestamp' })
-  @Prop()
-  lastLoginAt?: Date;
-
-  @ApiProperty({ description: 'Password reset token' })
-  @Prop()
-  resetPasswordToken?: string;
-
-  @ApiProperty({ description: 'Password reset token expiry' })
-  @Prop()
-  resetPasswordExpires?: Date;
-
-  @ApiProperty({ description: 'Email verification token' })
-  @Prop()
-  emailVerificationToken?: string;
-
-  @ApiProperty({ description: 'Email verification token expiry' })
-  @Prop()
-  emailVerificationExpiry?: Date;
-
-  @ApiProperty({ description: 'Billing address' })
-  @Prop({
-    type: {
-      firstName: { type: String, required: true, trim: true },
-      lastName: { type: String, required: true, trim: true },
-      company: { type: String, trim: true },
-      addressLine1: { type: String, required: true, trim: true },
-      addressLine2: { type: String, trim: true },
-      city: { type: String, required: true, trim: true },
-      state: { type: String, trim: true },
-      postalCode: { type: String, required: true, trim: true },
-      country: { type: String, required: true, trim: true },
-      phone: { type: String, trim: true },
-      email: { type: String, trim: true, lowercase: true },
-    },
-  })
-  billingAddress?: {
-    firstName: string;
-    lastName: string;
-    company?: string;
-    addressLine1: string;
-    addressLine2?: string;
-    city: string;
-    state?: string;
-    postalCode: string;
-    country: string;
-    phone?: string;
-    email?: string;
-  };
-
-  @ApiProperty({ description: 'Shipping address' })
-  @Prop({
-    type: {
-      firstName: { type: String, required: true, trim: true },
-      lastName: { type: String, required: true, trim: true },
-      company: { type: String, trim: true },
-      addressLine1: { type: String, required: true, trim: true },
-      addressLine2: { type: String, trim: true },
-      city: { type: String, required: true, trim: true },
-      state: { type: String, trim: true },
-      postalCode: { type: String, required: true, trim: true },
-      country: { type: String, required: true, trim: true },
-      phone: { type: String, trim: true },
-      email: { type: String, trim: true, lowercase: true },
-    },
-  })
-  shippingAddress?: {
-    firstName: string;
-    lastName: string;
-    company?: string;
-    addressLine1: string;
-    addressLine2?: string;
-    city: string;
-    state?: string;
-    postalCode: string;
-    country: string;
-    phone?: string;
-    email?: string;
-  };
+  @ApiProperty({ description: 'Preferred language' })
+  @Prop({ default: 'en' })
+  preferredLanguage: string;
 
   @ApiProperty({ description: 'Creation timestamp' })
   createdAt: Date;
@@ -131,5 +35,5 @@ export class Customer {
 export const CustomerSchema = SchemaFactory.createForClass(Customer);
 
 // Indexes
-CustomerSchema.index({ firstName: 1, lastName: 1 });
+CustomerSchema.index({ userId: 1 });
 CustomerSchema.index({ createdAt: -1 }); 

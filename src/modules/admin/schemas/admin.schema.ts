@@ -1,55 +1,40 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
+import { ApiProperty } from '@nestjs/swagger';
 
 export type AdminDocument = Admin & Document;
 
 @Schema({ timestamps: true })
 export class Admin {
-  @Prop({ required: true, unique: true })
-  email: string;
+  @ApiProperty({ description: 'Admin ID' })
+  _id: string;
 
-  @Prop({ required: true })
-  password: string;
+  @ApiProperty({ description: 'User ID (reference to User entity)' })
+  @Prop({ required: true, type: MongooseSchema.Types.ObjectId, ref: 'User', unique: true })
+  userId: string;
 
-  @Prop({ required: true })
-  firstName: string;
-
-  @Prop({ required: true })
-  lastName: string;
-
-  @Prop({ default: 'admin' })
+  @ApiProperty({ enum: ['admin', 'super_admin'], description: 'Admin role' })
+  @Prop({ required: true, enum: ['admin', 'super_admin'], default: 'admin' })
   role: 'admin' | 'super_admin';
 
-  @Prop({ default: true })
-  isActive: boolean;
+  @ApiProperty({ description: 'Permissions array' })
+  @Prop({ type: [String], default: [] })
+  permissions?: string[];
 
-  @Prop({ default: false })
-  isEmailVerified: boolean;
-
-  @Prop()
-  lastLoginAt?: Date;
-
+  @ApiProperty({ description: 'Password changed timestamp' })
   @Prop()
   passwordChangedAt?: Date;
 
-  @Prop()
-  passwordResetToken?: string;
+  @ApiProperty({ description: 'Creation timestamp' })
+  createdAt: Date;
 
-  @Prop()
-  passwordResetExpires?: Date;
-
-  @Prop()
-  emailVerificationToken?: string;
-
-  @Prop()
-  emailVerificationExpires?: Date;
+  @ApiProperty({ description: 'Last update timestamp' })
+  updatedAt: Date;
 }
 
 export const AdminSchema = SchemaFactory.createForClass(Admin);
 
-
-// Index for password reset tokens
-AdminSchema.index({ passwordResetToken: 1 });
-
-// Index for email verification tokens
-AdminSchema.index({ emailVerificationToken: 1 }); 
+// Indexes
+AdminSchema.index({ userId: 1 });
+AdminSchema.index({ role: 1 });
+AdminSchema.index({ createdAt: -1 }); 

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 
 export type BrandDocument = Brand & Document;
@@ -45,9 +45,9 @@ export class Brand {
   @Prop({ default: 0 })
   sortOrder: number;
 
-  @ApiProperty({ description: 'Main company name' })
-  @Prop({ type: String, trim: true })
-  mainCompany?: string;
+  @ApiProperty({ description: 'Parent brand ID (for sub-brands)' })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Brand' })
+  parentBrandId?: string;
 
   @ApiProperty({ enum: ['main', 'sub'], description: 'Brand level' })
   @Prop({ enum: ['main', 'sub'], default: 'main' })
@@ -73,9 +73,8 @@ export class Brand {
   @Prop({ default: false })
   isFeatured: boolean;
 
-  @ApiProperty({ description: 'Brand metadata' })
-  @Prop({ type: Object })
-  metadata?: Record<string, any>;
+  // Removed generic metadata field for type safety
+  // Use specific fields or extend schema if needed
 
   @ApiProperty({ description: 'Creation timestamp' })
   createdAt: Date;
@@ -88,6 +87,11 @@ export const BrandSchema = SchemaFactory.createForClass(Brand);
 
 // Indexes
 BrandSchema.index({ name: 1 });
+BrandSchema.index({ slug: 1 });
 BrandSchema.index({ isActive: 1 });
 BrandSchema.index({ sortOrder: 1 });
-BrandSchema.index({ country: 1 }); 
+BrandSchema.index({ parentBrandId: 1 });
+BrandSchema.index({ level: 1 });
+BrandSchema.index({ country: 1 });
+BrandSchema.index({ isFeatured: 1 });
+BrandSchema.index({ name: 'text', description: 'text' }); 

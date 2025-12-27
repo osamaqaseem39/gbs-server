@@ -95,3 +95,4 @@ After deployment, test the following:
 - The solution works for both development and production environments
 - All `.vercel.app` subdomains are automatically allowed
 
+

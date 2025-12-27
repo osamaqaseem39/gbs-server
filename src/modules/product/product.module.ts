@@ -7,11 +7,14 @@ import { SizeChartService } from './services/size-chart.service';
 import { ProductRepository } from './repositories/product.repository';
 import { Product, ProductSchema } from './schemas/product.schema';
 import { SizeChart, SizeChartSchema } from './schemas/size-chart.schema';
-import { Category, CategorySchema } from './schemas/category.schema';
+import { Category, CategorySchema } from '../category/schemas/category.schema';
 import { Tag, TagSchema } from './schemas/tag.schema';
 import { Attribute, AttributeSchema } from './schemas/attribute.schema';
 import { ProductImage, ProductImageSchema } from './schemas/product-image.schema';
 import { ProductVariation, ProductVariationSchema } from './schemas/product-variation.schema';
+import { ProductPricing, ProductPricingSchema } from './schemas/product-pricing.schema';
+import { ProductAttribute, ProductAttributeSchema } from './schemas/product-attribute.schema';
+import { ProductReviewSummary, ProductReviewSummarySchema } from './schemas/product-review-summary.schema';
 import { InventoryModule } from '../inventory/inventory.module';
 
 @Module({
@@ -24,6 +27,9 @@ import { InventoryModule } from '../inventory/inventory.module';
       { name: Attribute.name, schema: AttributeSchema },
       { name: ProductImage.name, schema: ProductImageSchema },
       { name: ProductVariation.name, schema: ProductVariationSchema },
+      { name: ProductPricing.name, schema: ProductPricingSchema },
+      { name: ProductAttribute.name, schema: ProductAttributeSchema },
+      { name: ProductReviewSummary.name, schema: ProductReviewSummarySchema },
     ]),
     forwardRef(() => InventoryModule),
   ],

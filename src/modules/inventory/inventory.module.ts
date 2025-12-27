@@ -5,6 +5,7 @@ import { InventoryService } from './services/inventory.service';
 import { InventoryRepository } from './repositories/inventory.repository';
 import { Inventory, InventorySchema } from './schemas/inventory.schema';
 import { InventoryMovement, InventoryMovementSchema } from './schemas/inventory-movement.schema';
+import { Warehouse, WarehouseSchema } from './schemas/warehouse.schema';
 import { ProductModule } from '../product/product.module';
 
 @Module({
@@ -12,6 +13,7 @@ import { ProductModule } from '../product/product.module';
     MongooseModule.forFeature([
       { name: Inventory.name, schema: InventorySchema },
       { name: InventoryMovement.name, schema: InventoryMovementSchema },
+      { name: Warehouse.name, schema: WarehouseSchema },
     ]),
     forwardRef(() => ProductModule),
   ],

@@ -13,9 +13,9 @@ export class Inventory {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Product', required: true })
   productId: string;
 
-  @ApiProperty({ description: 'Product variant ID' })
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'ProductVariant' })
-  variantId?: string;
+  @ApiProperty({ description: 'Product variation ID' })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'ProductVariation' })
+  variationId?: string;
 
   @ApiProperty({ description: 'Product size (for size-wise inventory management)' })
   @Prop({ type: String, trim: true })
@@ -29,9 +29,7 @@ export class Inventory {
   @Prop({ default: 0, min: 0 })
   reservedStock: number;
 
-  @ApiProperty({ description: 'Available stock quantity' })
-  @Prop({ required: true, min: 0 })
-  availableStock: number;
+  // availableStock = currentStock - reservedStock (computed)
 
   @ApiProperty({ description: 'Reorder point' })
   @Prop({ required: true, min: 0 })
@@ -45,17 +43,9 @@ export class Inventory {
   @Prop({ min: 0 })
   maxStock?: number;
 
-  @ApiProperty({ description: 'Cost price per unit' })
-  @Prop({ required: true, min: 0 })
-  costPrice: number;
-
-  @ApiProperty({ description: 'Selling price per unit' })
-  @Prop({ required: true, min: 0 })
-  sellingPrice: number;
-
-  @ApiProperty({ description: 'Warehouse location' })
-  @Prop({ default: 'main' })
-  warehouse: string;
+  @ApiProperty({ description: 'Warehouse ID' })
+  @Prop({ required: true, type: MongooseSchema.Types.ObjectId, ref: 'Warehouse' })
+  warehouseId: string;
 
   @ApiProperty({ description: 'Stock status' })
   @Prop({ 
@@ -81,9 +71,11 @@ export class Inventory {
 
 export const InventorySchema = SchemaFactory.createForClass(Inventory);
 
-// Indexes
-InventorySchema.index({ productId: 1, variantId: 1 });
-InventorySchema.index({ productId: 1, size: 1 });
-InventorySchema.index({ warehouse: 1 });
-InventorySchema.index({ status: 1 });
-InventorySchema.index({ currentStock: 1 });
+// Indexes - Compound unique index for product + variation + warehouse + size
+InventorySchema.index(
+  { productId: 1, variationId: 1, warehouseId: 1, size: 1 },
+  { unique: true, sparse: true }
+);
+InventorySchema.index({ warehouseId: 1, status: 1 });
+InventorySchema.index({ status: 1, currentStock: 1 });
+InventorySchema.index({ productId: 1 });

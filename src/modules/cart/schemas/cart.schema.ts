@@ -5,25 +5,6 @@ import { ApiProperty } from '@nestjs/swagger';
 export type CartDocument = Cart & Document;
 
 @Schema({ timestamps: true })
-export class CartItem {
-  @ApiProperty({ description: 'Product ID' })
-  @Prop({ required: true, type: MongooseSchema.Types.ObjectId, ref: 'Product' })
-  productId: string;
-
-  @ApiProperty({ description: 'Product variation ID' })
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'ProductVariation' })
-  variationId?: string;
-
-  @ApiProperty({ description: 'Quantity' })
-  @Prop({ required: true, min: 1 })
-  quantity: number;
-
-  @ApiProperty({ description: 'Price per unit' })
-  @Prop({ required: true, min: 0 })
-  price: number;
-}
-
-@Schema({ timestamps: true })
 export class Cart {
   @ApiProperty({ description: 'Cart ID' })
   _id: string;
@@ -36,17 +17,29 @@ export class Cart {
   @Prop({ required: true, unique: true })
   sessionId: string;
 
-  @ApiProperty({ description: 'Cart items' })
-  @Prop({ type: [CartItem], default: [] })
-  items: CartItem[];
+  @ApiProperty({ description: 'Cart items (references to CartItem collection)' })
+  @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'CartItem', default: [] })
+  items: string[];
 
   @ApiProperty({ description: 'Cart total' })
   @Prop({ required: true, min: 0, default: 0 })
   total: number;
 
   @ApiProperty({ description: 'Currency' })
-  @Prop({ required: true, default: 'PKR' })
+  @Prop({ default: 'PKR' })
   currency: string;
+
+  @ApiProperty({ description: 'Coupon ID' })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Coupon' })
+  couponId?: string;
+
+  @ApiProperty({ description: 'Cart expiration date' })
+  @Prop()
+  expiresAt?: Date; // Auto-expire after inactivity
+
+  @ApiProperty({ description: 'Last activity timestamp' })
+  @Prop()
+  lastActivityAt: Date;
 
   @ApiProperty({ description: 'Creation timestamp' })
   createdAt: Date;
@@ -59,4 +52,7 @@ export const CartSchema = SchemaFactory.createForClass(Cart);
 
 // Indexes
 CartSchema.index({ customerId: 1 });
+CartSchema.index({ sessionId: 1 });
+CartSchema.index({ expiresAt: 1 }); // For cleanup job
+CartSchema.index({ lastActivityAt: 1 });
 CartSchema.index({ createdAt: -1 }); 
